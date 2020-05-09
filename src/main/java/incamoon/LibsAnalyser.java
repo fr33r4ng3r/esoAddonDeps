@@ -39,27 +39,17 @@ public class LibsAnalyser {
         BigDecimal addonVersion;
     }
 
+    @Value
+    public static class VersionAndDirectory {
+        BigDecimal version;
+        Path directory;
+    }
+
     @Builder(toBuilder = true, builderClassName = "Builder")
     public static class Addon {
 
         private static final Pattern reColor = Pattern.compile("(?:\\|c([0-9A-Fa-f]){6}|\\|r|\\|$)");
-        /*
-        ## APIVersion: 100029 100030
-        ## Title: LibAddonMenu-2.0
-        ## Version: 2.0 r30
-        ## AddOnVersion: 30
-        ## IsLibrary: true
-        ## OptionalDependsOn: LibStub LibDebugLogger
 
-        ## Title: |c00FF00FCO |cFFFF00ItemSaver|r
-        ## Author: Baertram
-        ## Version: 1.9.3
-        ## AddOnVersion: 193
-        ## APIVersion: 100030 100031
-        ## Description: Mark/demark your inventory items with different icons and filter them in inventories, during trading, banks, guild store, mail, enchanting, crafting, researching and stores. Save your marked items before destroying/deconstructing/researching/selling/sending/trading/using or equipping/binding them!
-        ## SavedVariables: FCOItemSaver_Settings
-        ## DependsOn: LibAddonMenu-2.0>=28 LibCustomMenu>=682 LibDialog>=123 LibFeedback LibFilters-3.0>=315 LibLoadedAddons>=14 LibMainMenu-2.0>=432
-         */
         String name;
         String title;
         String version;
@@ -136,7 +126,7 @@ public class LibsAnalyser {
 
     private final String addonFolder;
 
-    private final Map<String, List<BigDecimal>> addonVersions = new HashMap<>();
+    private final Map<String, List<VersionAndDirectory>> addonVersions = new HashMap<>();
     private final Map<AddonIdent, Addon> addons = new HashMap<>();
 
     public LibsAnalyser(String addonFolder) {
@@ -238,7 +228,7 @@ public class LibsAnalyser {
                 });
 
                 final Addon addon = addonBuilder.build();
-                addonVersions.computeIfAbsent(addon.name, s -> new LinkedList<>()).add(Optional.ofNullable(addon.addonVersion).orElse(BigDecimal.ZERO));
+                addonVersions.computeIfAbsent(addon.name, s -> new LinkedList<>()).add(new VersionAndDirectory(Optional.ofNullable(addon.addonVersion).orElse(BigDecimal.ZERO), fInfo.getParent()));
                 addons.compute(
                         new AddonIdent(addon.name, addon.addonVersion),
                         (k, v) -> v == null ?
@@ -294,11 +284,11 @@ public class LibsAnalyser {
     }
 
     public List<AddonIdent> getDuplicates() {
-        return addonVersions.entrySet().stream().filter(e -> e.getValue().size() > 1).map(e -> new AddonIdent(e.getKey(), e.getValue().stream().max(Comparator.naturalOrder()).orElse(BigDecimal.ZERO))).collect(Collectors.toList());
+        return addonVersions.entrySet().stream().filter(e -> e.getValue().size() > 1).map(e -> new AddonIdent(e.getKey(), e.getValue().stream().map(VersionAndDirectory::getVersion).max(Comparator.naturalOrder()).orElse(BigDecimal.ZERO))).collect(Collectors.toList());
     }
 
     public boolean isAddonMissing(AddonIdent dep) {
-        final BigDecimal availableVersion = addonVersions.getOrDefault(dep.name, Collections.emptyList()).stream().max(BigDecimal::compareTo).orElse(MINUS_ONE);
+        final BigDecimal availableVersion = addonVersions.getOrDefault(dep.name, Collections.emptyList()).stream().map(VersionAndDirectory::getVersion).max(BigDecimal::compareTo).orElse(MINUS_ONE);
         return availableVersion.compareTo(dep.addonVersion) < 0;
     }
 
@@ -307,7 +297,17 @@ public class LibsAnalyser {
     }
 
     public boolean isDuplicate(Addon addon) {
-        return addonVersions.getOrDefault(addon.name, Collections.emptyList()).size() > 1;
+        final List<VersionAndDirectory> duplicates = addonVersions.getOrDefault(addon.name, Collections.emptyList());
+        final int potential = duplicates.size();
+        if (potential <= 1) return false;
+        final int selfNested = duplicates.stream().mapToInt(p1 -> duplicates.stream().mapToInt(p2 -> {
+            if (!p1.directory.equals(p2.directory) && p2.directory.startsWith(p1.directory)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }).sum()).sum();
+        return (potential - selfNested) > 1;
     }
 
     public Integer getCount() {
