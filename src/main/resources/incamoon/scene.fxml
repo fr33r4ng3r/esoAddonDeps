@@ -11,121 +11,107 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.StackPane?>
 
-<BorderPane prefHeight="768" prefWidth="1024" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="incamoon.Controller">
+<BorderPane prefHeight="768" prefWidth="1024" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="incamoon.Controller">
     <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
     </padding>
     <top>
-        <Text fx:id="message" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="main-text"
-              text="Welcome to ESO Addon Analyser" BorderPane.alignment="CENTER"/>
+        <Text fx:id="message" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="main-text" text="Welcome to ESO Addon Analyser" BorderPane.alignment="CENTER" />
     </top>
     <center>
-        <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-              AnchorPane.topAnchor="0.0" BorderPane.alignment="CENTER">
+        <VBox fx:id="container" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" BorderPane.alignment="CENTER">
             <children>
                 <HBox VBox.vgrow="NEVER">
                     <padding>
-                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
                     </padding>
                     <children>
-                        <TextField fx:id="folder" editable="false" maxWidth="Infinity" prefHeight="39.0"
-                                   prefWidth="859.0" promptText="Select ESO AddOn Folder" HBox.hgrow="ALWAYS">
+                        <TextField fx:id="folder" editable="false" maxWidth="Infinity" prefHeight="39.0" prefWidth="859.0" promptText="Select ESO AddOn Folder" HBox.hgrow="ALWAYS">
                             <HBox.margin>
-                                <Insets right="20"/>
+                                <Insets right="20" />
                             </HBox.margin>
                         </TextField>
-                        <JFXButton fx:id="browse" prefHeight="39.0" prefWidth="100.0" text="Browse"/>
+                        <JFXButton fx:id="browse" prefHeight="39.0" prefWidth="100.0" text="Browse" />
                     </children>
                 </HBox>
                 <GridPane prefHeight="26.0" prefWidth="1421.0">
                     <columnConstraints>
-                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0"/>
-                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0"/>
-                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
                     </columnConstraints>
                     <rowConstraints>
-                        <RowConstraints minHeight="50" vgrow="NEVER"/>
+                        <RowConstraints minHeight="50" vgrow="NEVER" />
                     </rowConstraints>
                     <children>
                         <FlowPane GridPane.columnIndex="0">
                             <padding>
-                                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+                                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
                             </padding>
                             <children>
-                                <JFXComboBox fx:id="versions" disable="true" prefHeight="40.0" prefWidth="250.0"/>
+                                <JFXComboBox fx:id="versions" disable="true" prefHeight="40.0" prefWidth="250.0" />
                             </children>
                         </FlowPane>
-                        <JFXButton fx:id="analyse" disable="true" prefWidth="200" text="Analyse"
-                                   GridPane.columnIndex="1" GridPane.halignment="CENTER">
-                            <font>
-                                <Font size="24.0"/>
-                            </font>
-                        </JFXButton>
-                        <TextArea fx:id="log" editable="false" focusTraversable="false" GridPane.columnIndex="2"/>
+                        <FlowPane GridPane.columnIndex="1" GridPane.halignment="CENTER" hgap="5">
+                            <padding>
+                                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                            </padding>
+                           <children>
+                               <JFXButton fx:id="analyse" disable="true" prefWidth="200" text="Analyse">
+                                   <font>
+                                       <Font size="24.0" />
+                                   </font>
+                               </JFXButton>
+                               <ProgressIndicator fx:id="progress" visible="false" maxHeight="36.0"/>
+                           </children>
+                        </FlowPane>
+                        <TextArea fx:id="log" editable="false" focusTraversable="false" GridPane.columnIndex="2" />
                     </children>
                 </GridPane>
                 <SplitPane dividerPositions="0.5" orientation="VERTICAL" VBox.vgrow="ALWAYS">
                     <items>
                         <SplitPane dividerPositions="0.8">
                             <items>
-                                <TitledPane animated="false" collapsible="false" maxHeight="Infinity" prefHeight="0.0"
-                                            prefWidth="986.0" text="Libs" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
+                                <TitledPane animated="false" collapsible="false" maxHeight="Infinity" prefHeight="0.0" prefWidth="986.0" text="Libs" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
                                     <content>
-                                        <TableView fx:id="libsTable" fixedCellSize="60.0" maxHeight="Infinity"
-                                                   prefHeight="274.0" prefWidth="984.0" VBox.vgrow="ALWAYS">
+                                        <TableView fx:id="libsTable" fixedCellSize="60.0" maxHeight="Infinity" prefHeight="274.0" prefWidth="984.0" VBox.vgrow="ALWAYS">
                                             <columns>
-                                                <TableColumn fx:id="libsNameColumn" editable="false" minWidth="50.0"
-                                                             prefWidth="400.0" text="Name"/>
-                                                <TableColumn fx:id="libsOODColumn" editable="false" prefWidth="50.0"
-                                                             style="-fx-alignment: center-right" text="OOD"/>
-                                                <TableColumn fx:id="libsVersionColumm" editable="false"
-                                                             prefWidth="100.0" text="Version"/>
-                                                <TableColumn fx:id="libsDependenciesColumm" editable="false"
-                                                             prefWidth="200.0" text="Requires"/>
-                                                <TableColumn fx:id="libsOptionalDependenciesColumm" editable="false"
-                                                             prefWidth="200.0" text="Optional"/>
+                                                <TableColumn fx:id="libsNameColumn" editable="false" minWidth="50.0" prefWidth="400.0" text="Name" />
+                                                <TableColumn fx:id="libsOODColumn" editable="false" prefWidth="50.0" style="-fx-alignment: center-right" text="OOD" />
+                                                <TableColumn fx:id="libsVersionColumm" editable="false" prefWidth="100.0" text="Version" />
+                                                <TableColumn fx:id="libsDependenciesColumm" editable="false" prefWidth="200.0" text="Requires" />
+                                                <TableColumn fx:id="libsOptionalDependenciesColumm" editable="false" prefWidth="200.0" text="Optional" />
                                             </columns>
                                         </TableView>
                                     </content>
                                     <font>
-                                        <Font name="System Bold" size="18.0"/>
+                                        <Font name="System Bold" size="18.0" />
                                     </font>
                                 </TitledPane>
                                 <SplitPane dividerPositions="0.5" orientation="VERTICAL" VBox.vgrow="ALWAYS">
                                     <items>
-                                        <TitledPane animated="false" collapsible="false" maxHeight="Infinity"
-                                                    prefWidth="265.0" text="Missing" HBox.hgrow="NEVER"
-                                                    VBox.vgrow="ALWAYS">
+                                        <TitledPane animated="false" collapsible="false" maxHeight="Infinity" prefWidth="265.0" text="Missing" HBox.hgrow="NEVER" VBox.vgrow="ALWAYS">
                                             <content>
-                                                <TableView fx:id="libsMissing" fixedCellSize="30.0" maxHeight="Infinity"
-                                                           prefHeight="274.0" prefWidth="400.0">
+                                                <TableView fx:id="libsMissing" fixedCellSize="30.0" maxHeight="Infinity" prefHeight="274.0" prefWidth="400.0">
                                                     <columns>
-                                                        <TableColumn fx:id="missNameColumn" editable="false"
-                                                                     minWidth="50.0"
-                                                                     prefWidth="200.0" text="Name"/>
+                                                        <TableColumn fx:id="missNameColumn" editable="false" minWidth="50.0" prefWidth="200.0" text="Name" />
                                                     </columns>
                                                 </TableView>
                                             </content>
                                             <font>
-                                                <Font name="System Bold" size="18.0"/>
+                                                <Font name="System Bold" size="18.0" />
                                             </font>
                                         </TitledPane>
-                                        <TitledPane animated="false" collapsible="false" maxHeight="Infinity"
-                                                    prefWidth="265.0" text="Duplicates" HBox.hgrow="NEVER"
-                                                    VBox.vgrow="ALWAYS">
+                                        <TitledPane animated="false" collapsible="false" maxHeight="Infinity" prefWidth="265.0" text="Duplicates" HBox.hgrow="NEVER" VBox.vgrow="ALWAYS">
                                             <content>
-                                                <TableView fx:id="libsDuplicated" fixedCellSize="30.0" maxHeight="Infinity"
-                                                           prefHeight="274.0" prefWidth="400.0">
+                                                <TableView fx:id="libsDuplicated" fixedCellSize="30.0" maxHeight="Infinity" prefHeight="274.0" prefWidth="400.0">
                                                     <columns>
-                                                        <TableColumn fx:id="dupsNameColumn" editable="false"
-                                                                     minWidth="50.0"
-                                                                     prefWidth="200.0" text="Name"/>
+                                                        <TableColumn fx:id="dupsNameColumn" editable="false" minWidth="50.0" prefWidth="200.0" text="Name" />
                                                     </columns>
                                                 </TableView>
                                             </content>
                                             <font>
-                                                <Font name="System Bold" size="18.0"/>
+                                                <Font name="System Bold" size="18.0" />
                                             </font>
                                         </TitledPane>
                                     </items>
@@ -134,29 +120,23 @@
                         </SplitPane>
                         <TitledPane animated="false" collapsible="false" maxHeight="Infinity" text="Addons">
                             <content>
-                                <TableView fx:id="addsTable" fixedCellSize="60.0" maxHeight="Infinity"
-                                           prefHeight="274.0" prefWidth="984.0" VBox.vgrow="ALWAYS">
+                                <TableView fx:id="addsTable" fixedCellSize="60.0" maxHeight="Infinity" prefHeight="274.0" prefWidth="984.0" VBox.vgrow="ALWAYS">
                                     <columns>
-                                        <TableColumn fx:id="addsNameColumn" editable="false" minWidth="50.0"
-                                                     prefWidth="400.0" text="Name"/>
-                                        <TableColumn fx:id="addsOODColumn" editable="false" prefWidth="50.0"
-                                                     style="-fx-alignment: center-right" text="OOD"/>
-                                        <TableColumn fx:id="addsVersionColumm" editable="false" prefWidth="100.0"
-                                                     text="Version"/>
-                                        <TableColumn fx:id="addsDependenciesColumm" editable="false" prefWidth="400.0"
-                                                     text="Requires"/>
-                                        <TableColumn fx:id="addsOptionalDependenciesColumm" editable="false"
-                                                     prefWidth="400.0" text="Optional"/>
+                                        <TableColumn fx:id="addsNameColumn" editable="false" minWidth="50.0" prefWidth="400.0" text="Name" />
+                                        <TableColumn fx:id="addsOODColumn" editable="false" prefWidth="50.0" style="-fx-alignment: center-right" text="OOD" />
+                                        <TableColumn fx:id="addsVersionColumm" editable="false" prefWidth="100.0" text="Version" />
+                                        <TableColumn fx:id="addsDependenciesColumm" editable="false" prefWidth="400.0" text="Requires" />
+                                        <TableColumn fx:id="addsOptionalDependenciesColumm" editable="false" prefWidth="400.0" text="Optional" />
                                     </columns>
                                 </TableView>
                             </content>
                             <font>
-                                <Font name="System Bold" size="18.0"/>
+                                <Font name="System Bold" size="18.0" />
                             </font>
                         </TitledPane>
                     </items>
                     <VBox.margin>
-                        <Insets top="20.0"/>
+                        <Insets top="20.0" />
                     </VBox.margin>
                 </SplitPane>
             </children>

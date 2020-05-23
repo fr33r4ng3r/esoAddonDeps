@@ -1,15 +1,18 @@
 package incamoon;
 
 import com.jfoenix.controls.JFXComboBox;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -20,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -37,6 +42,12 @@ public class Controller implements Initializable {
     private Preferences preferences;
 
     private ApiVersions apiVersions;
+
+    @FXML
+    public VBox container;
+
+    @FXML
+    public ProgressIndicator progress;
 
     @FXML
     private TextArea log;
@@ -293,7 +304,8 @@ public class Controller implements Initializable {
             } else if (addon.isEmbedded()) {
                 final MenuItem menuItem = new MenuItem("delete");
                 menuItem.setOnAction(event -> {
-                    final String paths = addon.getPaths().stream().map(p -> "[\\" + p + "]").collect(Collectors.joining(", "));                            final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    final String paths = addon.getPaths().stream().map(p -> "[\\" + p + "]").collect(Collectors.joining(", "));
+                    final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                     alert.setTitle("WARNING!  This cannot be undone! Are you sure?");
                     alert.setHeaderText("You are about to remove nested library folder(s): " + paths);
                     alert.setContentText("Please make sure you have a backup of all your addons first!");
@@ -367,35 +379,53 @@ public class Controller implements Initializable {
     }
 
     private void onAnalyse(ActionEvent event) {
+
+        container.setDisable(true);
+        progress.setVisible(true);
         analyser = new LibsAnalyser(folder.getText());
-        try {
-            analyser.load(s -> log.appendText(s + "\n"));
-            final ObservableList<LibsAnalyser.Addon> libs = FXCollections.observableList(analyser.getLibs());
-            final ObservableList<LibsAnalyser.Addon> adds = FXCollections.observableList(analyser.getAddons());
-            final ObservableList<LibsAnalyser.AddonIdent> miss = FXCollections.observableList(analyser.getMissing());
-            final ObservableList<LibsAnalyser.AddonIdent> dups = FXCollections.observableList(analyser.getDuplicates());
-            libsTable.setItems(libs);
-            addsTable.setItems(adds);
-            libsMissing.setItems(miss);
-            libsDuplicated.setItems(dups);
-            ObservableList<String> vss = FXCollections.observableList(analyser.getVersions());
-            versions.setItems(vss);
-            versions.setDisable(false);
-            vss.addListener((ListChangeListener<? super String>) c -> {
-                while (c.next()) {
-                    for (int i = c.getFrom(); i < c.getTo(); i++) {
-                        final String s = c.getList().get(i);
-                        if (s.endsWith("[*]")) {
-                            versions.setValue(s);
-                        }
-                    }
+
+        final Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                try {
+                    analyser.load(s -> log.appendText(s + "\n"));
+                    Platform.runLater(() -> {
+                        final ObservableList<LibsAnalyser.Addon> libs = FXCollections.observableList(analyser.getLibs());
+                        final ObservableList<LibsAnalyser.Addon> adds = FXCollections.observableList(analyser.getAddons());
+                        final ObservableList<LibsAnalyser.AddonIdent> miss = FXCollections.observableList(analyser.getMissing());
+                        final ObservableList<LibsAnalyser.AddonIdent> dups = FXCollections.observableList(analyser.getDuplicates());
+                        libsTable.setItems(libs);
+                        addsTable.setItems(adds);
+                        libsMissing.setItems(miss);
+                        libsDuplicated.setItems(dups);
+                        final ObservableList<String> vss = FXCollections.observableList(analyser.getVersions());
+                        versions.setItems(vss);
+                        versions.setDisable(false);
+                        vss.addListener((ListChangeListener<? super String>) c -> {
+                            while (c.next()) {
+                                for (int i = c.getFrom(); i < c.getTo(); i++) {
+                                    final String s = c.getList().get(i);
+                                    if (s.endsWith("[*]")) {
+                                        versions.setValue(s);
+                                    }
+                                }
+                            }
+                        });
+                        apiVersions.bind(vss);
+                        progress.setVisible(false);
+                        container.setDisable(false);
+                    });
+                    container.requestLayout();
+                } catch (IOException e) {
+                    LOG.log(Level.SEVERE, e, () -> "Failed to Analyse Addons : " + e.getMessage());
+                    message.setText("Operation Failed, please check you have the correct folder selected");
                 }
-            });
-            apiVersions.bind(vss);
-        } catch (IOException e) {
-            LOG.log(Level.SEVERE, e, () -> "Failed to Analyse Addons : " + e.getMessage());
-            message.setText("Operation Failed, please check you have the correct folder selected");
-        }
+                return null;
+            }
+        };
+
+        Executors.defaultThreadFactory().newThread(task).start();
+
     }
 
     private void onBrowse(ActionEvent event) {
