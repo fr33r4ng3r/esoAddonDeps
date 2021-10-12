@@ -14,13 +14,14 @@ repositories {
 }
 
 dependencies {
-    compile 'com.jfoenix:jfoenix:9.0.9'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
-    compileOnly 'org.projectlombok:lombok:1.18.12'
-    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+    implementation 'com.jfoenix:jfoenix:9.0.10'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
 
-    testImplementation('org.junit.jupiter:junit-jupiter:5.6.2')
-    testCompileOnly 'org.projectlombok:lombok:1.18.12'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    testCompileOnly 'org.projectlombok:lombok:1.18.20'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
 }
 

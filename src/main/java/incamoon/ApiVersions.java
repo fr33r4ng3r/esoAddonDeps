@@ -61,7 +61,7 @@ public class ApiVersions {
         }
     }
 
-    private void tryUpdateFromWiki() {
+    void tryUpdateFromWiki() {
         fetchWiki().thenAccept(success -> {
             if (success) {
                 apiVersions.setProperty(LAST_UPDATED, LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE));
@@ -88,19 +88,23 @@ public class ApiVersions {
     }
 
     private CompletionStage<Boolean> fetchWiki() {
-        return fetch(URI.create("https://wiki.esoui.com//w/api.php?action=query&prop=revisions&titles=APIVersion&rvslots=*&rvprop=content&formatversion=2&format=json"))
+        return fetch(URI.create("https://wiki.esoui.com/w/api.php?action=query&prop=revisions&titles=APIVersion&rvslots=*&rvprop=content&formatversion=2&format=json"))
                 .thenApply(result -> result.get("query").get("pages").fields().next().getValue().get("revisions").get(0).get("*").asText())
-                .thenApply(this::parseWiki);
+                .thenApply(this::parseWiki)
+                .exceptionally(e -> {
+                    LOG.log(Level.SEVERE, e, () -> "Unable to get results from wiki");
+                    return false;
+                });
     }
 
     private boolean parseWiki(String page) {
-        final Pattern reLiveVersion = Pattern.compile("^\\* '''Live: \\[\\[APIVersion\\|(\\d*)]]", Pattern.MULTILINE);
-        final Pattern rePTSVersion = Pattern.compile("^\\* '''PTS: \\[\\[APIVersion\\|(\\d*)]]", Pattern.MULTILINE);
+        final Pattern reLiveVersion = Pattern.compile("== live API version ==\\n\\n===(\\d*)===", Pattern.MULTILINE);
+        final Pattern rePTSVersion = Pattern.compile("== PTS API version ==\\n\\n===(\\d*)===", Pattern.MULTILINE);
 
-        final Pattern reVersionSection = Pattern.compile("===\\s?(\\d*)\\s?===(.*?)(?:<br>|\n)\n\n", Pattern.DOTALL);
+        final Pattern reVersionSection = Pattern.compile("===(\\d*)===(.*?)(?:<br>|\n)\n\n", Pattern.DOTALL);
 
-        final Pattern reSectionUpdate = Pattern.compile("^\\* '''Update''': (.*)", Pattern.MULTILINE);
-        final Pattern reSectionFeature = Pattern.compile("^\\* '''Features''': (.*)", Pattern.MULTILINE);
+        final Pattern reSectionUpdate = Pattern.compile("^\\* '''Update''': ([^\\['\\n]*)", Pattern.MULTILINE);
+        final Pattern reSectionFeature = Pattern.compile("^\\* '''Features''': ([^\\['\\n]*)", Pattern.MULTILINE);
 
         try {
             final Matcher reLiveMatcher = reLiveVersion.matcher(page);
@@ -121,12 +125,12 @@ public class ApiVersions {
                 final String section = matchResult.group(2);
                 final Matcher updateMatcher = reSectionUpdate.matcher(section);
                 if (updateMatcher.find()) {
-                    final String update = updateMatcher.group(1);
+                    final String update = updateMatcher.group(1).trim();
                     apiVersions.setProperty("v" + versionNumber + ".update", update);
                 }
                 final Matcher featureMatcher = reSectionFeature.matcher(section);
                 if (featureMatcher.find()) {
-                    final String feature = featureMatcher.group(1);
+                    final String feature = featureMatcher.group(1).trim();
                     apiVersions.setProperty("v" + versionNumber + ".feature", feature);
                 }
             });
@@ -156,6 +160,9 @@ public class ApiVersions {
                         LOG.log(Level.SEVERE, e, () -> "Unable to parse wiki response");
                         return null;
                     }
+                }).exceptionally(e -> {
+                    LOG.log(Level.SEVERE, e, () -> "Unable to get results from wiki");
+                    return null;
                 });
     }
 

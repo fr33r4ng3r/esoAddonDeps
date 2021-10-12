@@ -389,33 +389,6 @@ public class Controller implements Initializable {
             protected Void call() throws Exception {
                 try {
                     analyser.load(s -> log.appendText(s + "\n"));
-                    Platform.runLater(() -> {
-                        final ObservableList<LibsAnalyser.Addon> libs = FXCollections.observableList(analyser.getLibs());
-                        final ObservableList<LibsAnalyser.Addon> adds = FXCollections.observableList(analyser.getAddons());
-                        final ObservableList<LibsAnalyser.AddonIdent> miss = FXCollections.observableList(analyser.getMissing());
-                        final ObservableList<LibsAnalyser.AddonIdent> dups = FXCollections.observableList(analyser.getDuplicates());
-                        libsTable.setItems(libs);
-                        addsTable.setItems(adds);
-                        libsMissing.setItems(miss);
-                        libsDuplicated.setItems(dups);
-                        final ObservableList<String> vss = FXCollections.observableList(analyser.getVersions());
-                        versions.setItems(vss);
-                        versions.setDisable(false);
-                        vss.addListener((ListChangeListener<? super String>) c -> {
-                            while (c.next()) {
-                                for (int i = c.getFrom(); i < c.getTo(); i++) {
-                                    final String s = c.getList().get(i);
-                                    if (s.endsWith("[*]")) {
-                                        versions.setValue(s);
-                                    }
-                                }
-                            }
-                        });
-                        apiVersions.bind(vss);
-                        progress.setVisible(false);
-                        container.setDisable(false);
-                    });
-                    container.requestLayout();
                 } catch (IOException e) {
                     LOG.log(Level.SEVERE, e, () -> "Failed to Analyse Addons : " + e.getMessage());
                     message.setText("Operation Failed, please check you have the correct folder selected");
@@ -423,6 +396,34 @@ public class Controller implements Initializable {
                 return null;
             }
         };
+
+        task.setOnSucceeded(e -> {
+            final ObservableList<LibsAnalyser.Addon> libs = FXCollections.observableList(analyser.getLibs());
+            final ObservableList<LibsAnalyser.Addon> adds = FXCollections.observableList(analyser.getAddons());
+            final ObservableList<LibsAnalyser.AddonIdent> miss = FXCollections.observableList(analyser.getMissing());
+            final ObservableList<LibsAnalyser.AddonIdent> dups = FXCollections.observableList(analyser.getDuplicates());
+            libsTable.setItems(libs);
+            addsTable.setItems(adds);
+            libsMissing.setItems(miss);
+            libsDuplicated.setItems(dups);
+            final ObservableList<String> vss = FXCollections.observableList(analyser.getVersions());
+            versions.setItems(vss);
+            versions.setDisable(false);
+            vss.addListener((ListChangeListener<? super String>) c -> {
+                while (c.next()) {
+                    for (int i = c.getFrom(); i < c.getTo(); i++) {
+                        final String s = c.getList().get(i);
+                        if (s.endsWith("[*]")) {
+                            versions.setValue(s);
+                        }
+                    }
+                }
+            });
+            apiVersions.bind(vss);
+            progress.setVisible(false);
+            container.setDisable(false);
+            container.requestLayout();
+        });
 
         Executors.defaultThreadFactory().newThread(task).start();
 
